@@ -38,8 +38,8 @@ exports.stakeNewNfts = async (req_, res_) => {
                 _dailyRewardAmount = 22
             else if (_nftList.length == 2)
                 _dailyRewardAmount = 27
-            else if (_nftList.length >= 3)
-                _dailyRewardAmount = 32
+            else
+                _dailyRewardAmount = 32 + (_nftList.length - 3) * 3
 
             const _newRewardInfo = new RewardInfo({
                 accountId: _accountId,
@@ -54,8 +54,8 @@ exports.stakeNewNfts = async (req_, res_) => {
                 _dailyRewardAmount = 22
             else if (_oldRewardInfo.stakedNftCount + _nftList.length == 2)
                 _dailyRewardAmount = 27
-            else if (_oldRewardInfo.stakedNftCount + _nftList.length >= 3)
-                _dailyRewardAmount = 32
+            else
+                _dailyRewardAmount = 32 + (_oldRewardInfo.stakedNftCount + _nftList.length - 3) * 3
 
             await RewardInfo.findOneAndUpdate(
                 { accountId: _accountId },
@@ -148,7 +148,7 @@ exports.unstakeNftList = async (req_, res_) => {
             return res_.send({ result: false, error: 'Error! The transaction was rejected, or failed! Please try again!' });
 
         let _rewardAmount = 0
-        for (let i = 0;i < _nftList.length;i++) {
+        for (let i = 0; i < _nftList.length; i++) {
             const _stakedNFTInfo = await StakedNfts.findOne({ accountId: _accountId, token_id: _nftList[i].token_id, serial_number: _nftList[i].serial_number })
             if (_stakedNFTInfo.reward_amount > 0)
                 _rewardAmount += _stakedNFTInfo.reward_amount
@@ -156,13 +156,36 @@ exports.unstakeNftList = async (req_, res_) => {
 
         const _rewardInfo = await RewardInfo.findOne({ accountId: _accountId })
         if (_rewardInfo) {
-            await RewardInfo.findOneAndUpdate(
-                { accountId: _accountId },
-                {
-                    stakedNftCount: _rewardInfo.stakedNftCount - _nftList.length,
-                    amount: _rewardInfo.amount + _rewardAmount,
-                }
-            )
+            if (_rewardInfo.stakedNftCount - _nftList.length == 1) {
+                await RewardInfo.findOneAndUpdate(
+                    { accountId: _accountId },
+                    {
+                        stakedNftCount: _rewardInfo.stakedNftCount - _nftList.length,
+                        amount: _rewardInfo.amount + _rewardAmount,
+                        daily_reward: 22
+                    }
+                )
+            }
+            else if (_rewardInfo.stakedNftCount - _nftList.length == 2) {
+                await RewardInfo.findOneAndUpdate(
+                    { accountId: _accountId },
+                    {
+                        stakedNftCount: _rewardInfo.stakedNftCount - _nftList.length,
+                        amount: _rewardInfo.amount + _rewardAmount,
+                        daily_reward: 27
+                    }
+                )
+            }
+            else {
+                await RewardInfo.findOneAndUpdate(
+                    { accountId: _accountId },
+                    {
+                        stakedNftCount: _rewardInfo.stakedNftCount - _nftList.length,
+                        amount: _rewardInfo.amount + _rewardAmount,
+                        daily_reward: 32 + (_rewardInfo.stakedNftCount - _nftList.length - 3)*3
+                    }
+                )
+            }
         }
 
         for (let i = 0; i < _nftList.length; i++)

@@ -6,7 +6,7 @@ const stakedNftsSchema = new mongoose.Schema({
   imageUrl: { type: String, default: "" },
   name: { type: String, default: "" },
   reward_amount: { type: Number, default: 0 },
-  currentLockoutPeriod: { type: Number, default: 7 }
+  currentLockoutPeriod: { type: Number, default: 14 }
 }, { timestamps: true });
 
 module.exports = stakedNfts = mongoose.model('stakedNfts', stakedNftsSchema);
