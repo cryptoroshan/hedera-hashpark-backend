@@ -229,21 +229,21 @@ exports.setClaimReward = async (req_, res_) => {
 }
 
 const stakeTimerOut = async (id_) => {
-    console.log("stakeTimerOut", id_);
     // check existing
     const _findStakedNftInfo = await StakedNfts.findOne({ _id: id_ });
     if (_findStakedNftInfo === null) return;
 
     const _rewardInfo = await RewardInfo.findOne({ accountId: _findStakedNftInfo.accountId });
-    if (_rewardInfo.checkSerialNumber == 0 || _rewardInfo.checkSerialNumber == _findStakedNftInfo.serial_number) {
-        console.log('asdfasdfasdfs')
-        await RewardInfo.findOneAndUpdate(
-            { accountId: _findStakedNftInfo.accountId },
-            {
-                amount: _rewardInfo.amount + _rewardInfo.daily_reward,
-                checkSerialNumber: _findStakedNftInfo.serial_number
-            }
-        );
+    if (_findStakedNftInfo.currentLockoutPeriod < 14) {
+        if (_rewardInfo.checkSerialNumber == 0 || _rewardInfo.checkSerialNumber == _findStakedNftInfo.serial_number) {
+            await RewardInfo.findOneAndUpdate(
+                { accountId: _findStakedNftInfo.accountId },
+                {
+                    amount: _rewardInfo.amount + _rewardInfo.daily_reward,
+                    checkSerialNumber: _findStakedNftInfo.serial_number
+                }
+            );
+        }
     }
 
     if (_findStakedNftInfo.currentLockoutPeriod !== 0) {
@@ -273,7 +273,6 @@ function setDaysTimeout(callback, days, id_) {
 }
 
 const initStakeTimer = async () => {
-    console.log(Date.now())
     const _findStakedNftInfo = await StakedNfts.find({}).sort({ accountId: -1 });
     for (let i = 0; i < _findStakedNftInfo.length; i++) {
         const _count = Math.floor((Date.now() - _findStakedNftInfo[i].createdAt) / 86400000);
