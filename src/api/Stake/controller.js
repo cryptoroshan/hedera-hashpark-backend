@@ -102,7 +102,12 @@ exports.loadStakedNfts = async (req_, res_) => {
             })
         }
 
-        return res_.send({ result: true, data: _stakedNftInfo });
+        let _dailyReward = 0
+        const _rewardInfo = await RewardInfo.findOne({ accountId: _accountId })
+        if (_rewardInfo)
+            _dailyReward = _rewardInfo.daily_reward
+
+        return res_.send({ result: true, data: _stakedNftInfo, dailyReward: _dailyReward });
     } catch (error) {
         return res_.send({ result: false, error: 'Error detected in server progress!' });
     }
