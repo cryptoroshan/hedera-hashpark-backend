@@ -37,7 +37,7 @@ exports.stakeNewNfts = async (req_, res_) => {
             if (_nftList.length == 0)
                 _dailyRewardAmount = 0
             else
-                _dailyRewardAmount = 32 + (_nftList.length - 1) * 5
+                _dailyRewardAmount = 22 + (_nftList.length - 1) * 5
 
             const _newRewardInfo = new RewardInfo({
                 accountId: _accountId,
