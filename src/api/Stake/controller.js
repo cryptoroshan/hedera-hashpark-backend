@@ -42,7 +42,8 @@ exports.stakeNewNfts = async (req_, res_) => {
             const _newRewardInfo = new RewardInfo({
                 accountId: _accountId,
                 stakedNftCount: _nftList.length,
-                daily_reward: _dailyRewardAmount
+                daily_reward: _dailyRewardAmount,
+                checkSerialNumber: _nftList[0].serial_number
             });
             await _newRewardInfo.save();
         }
@@ -143,10 +144,12 @@ exports.unstakeNftList = async (req_, res_) => {
         if (!tsxResult)
             return res_.send({ result: false, error: 'Error! The transaction was rejected, or failed! Please try again!' });
 
+        let _flag = 0
         for (let i = 0; i < _nftList.length; i++) {
             const _stakedNFTInfo = await StakedNfts.findOne({ accountId: _accountId, token_id: _nftList[i].token_id, serial_number: _nftList[i].serial_number })
             const _rewardInfo = await RewardInfo.findOne({ accountId: _accountId })
             if (_stakedNFTInfo.serial_number === _rewardInfo.checkSerialNumber) {
+                _flag = 1
                 await RewardInfo.findOneAndUpdate(
                     { accountId: _accountId },
                     { checkSerialNumber: 0 }
@@ -171,6 +174,16 @@ exports.unstakeNftList = async (req_, res_) => {
 
         for (let i = 0; i < _nftList.length; i++)
             await StakedNfts.findOneAndDelete({ accountId: _accountId, token_id: _nftList[i].token_id, serial_number: _nftList[i].serial_number });
+
+        if (_flag == 1) {
+            const _stakedNFTInfo = await StakedNfts.find({ accountId: _accountId })
+            if (_stakedNFTInfo) {
+                await RewardInfo.findOneAndUpdate(
+                    { accountId: _accountId },
+                    { checkSerialNumber: _stakedNFTInfo[0].serial_number }
+                )
+            }
+        }
 
         return res_.send({ result: true, data: "Unstake success!" });
     } catch (error) {
